@@ -1,9 +1,11 @@
 import React, { Component } from 'react';
+import axios from 'axios';
 
 import './App.css';
 
 import Header from './Header/Header';
 import Compose from './Compose/Compose';
+import Post from './Post/Post';
 
 class App extends Component {
   constructor() {
@@ -17,23 +19,54 @@ class App extends Component {
     this.deletePost = this.deletePost.bind( this );
     this.createPost = this.createPost.bind( this );
   }
-  
+
+  //axios.get('').then(funcSuccess, funcFail)
   componentDidMount() {
-
+    axios.get('https://practiceapi.devmountain.com/api/posts').then(response => {
+      this.setState({posts: response.data});
+      }, 
+      response => {
+        window.alert("Error receiving comment history. Response from service: \n" + response);
+      }
+    )
   }
 
-  updatePost() {
-  
+  //updates this states "posts" array - changing the text of the state's post using the ID and the TEXT of the provided parameter post object. 
+  updatePost(text, id) {
+    axios.put(`https://practiceapi.devmountain.com/api/posts?id=${id}`, {text: text}).then(
+      response => {
+        this.setState({posts: response.data});
+      }, 
+      response => {
+        window.alert("Error updating comment. Response from service: \n" + response);
+      });
   }
 
-  deletePost() {
-
+  deletePost(id) {
+    console.log(id);
+    axios.delete(`https://practiceapi.devmountain.com/api/posts?id=5130`).then(
+      response => {
+        this.setState({posts: response.data});
+      },
+      response => {
+        window.alert("Error deleting comment. Response from service: \n" + response);
+      });
   }
 
-  createPost() {
-
+  createPost(text) {
+    axios.post(`https://practiceapi.devmountain.com/api/posts`, {text: text}).then(
+      response => {
+        this.setState({posts: response.data});
+      },
+      response => {
+        window.alert("Error adding comment. Response from service: \n" + response);
+      }
+    )
   }
 
+
+  //Example of a post object that is stored in the post array: 
+  //{id: 5074, text: "Hi, ↵it is me", date: "07 Mar 2021"}
   render() {
     const { posts } = this.state;
 
@@ -42,9 +75,16 @@ class App extends Component {
         <Header />
 
         <section className="App__content">
-
-          <Compose />
-          
+          <Compose createPostFn={this.createPost}/>
+          {this.state.posts.map( post => {
+            return (<Post 
+              key={ post.id } 
+              text={ post.text } 
+              date={ post.date } 
+              updatePostFn={ this.updatePost } 
+              id={ post.id } 
+              deletePostFn={ this.deletePost }/>)
+          })}
         </section>
       </div>
     );
